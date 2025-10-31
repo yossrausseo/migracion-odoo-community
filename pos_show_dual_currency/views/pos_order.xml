@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<odoo>
+
+    <record id="view_pos_order_tree" model="ir.ui.view">
+        <field name="name">pos.order.inherit.view.form</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
+        <field name="arch" type="xml">
+            <!-- Add your xpath here -->
+            <field name="amount_total" position="after">
+                <field name="tax_today"/>
+                <field name="total_amount_usd" sum="Currency Amount" decoration-bf="1"/>
+            </field>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<odoo>
+
+	<record id="view_pos_dyal_currency_inherit" model="ir.ui.view">
+        <field name="name">pos.order.form.inherit</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+        	<xpath expr="//field[@name='lines']/tree/field[@name='price_unit']" position="before">
+        		 <field name="tax_today" readonly="1" optional="show"/>
+        	</xpath>
+            <xpath expr="//field[@name='lines']/tree/field[@name='price_subtotal']" position="before">
+                <field name="subtotal_neto_usd" readonly="1" optional="show"/>
+            </xpath>
+            <xpath expr="//field[@name='lines']/tree/field[@name='price_subtotal_incl']" position="before">
+                <field name="subtotal_incl_usd" readonly="1" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
