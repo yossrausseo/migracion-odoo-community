@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--    Add a popup window-->
+<templates id="template" xml:space="preserve">
+   <t t-name="PatientPopup" owl="1">
+      <div class="popup product-line-popup">
+         <main class="body">
+            <div>
+               <header>
+                  <h3>
+                     <span>Pacientes</span>
+                      <i class="fa fa-times" style="float:right"
+                         t-on-click="cancel"/>
+                      <hr/>
+                  </h3>
+                  <div class="search-wrapper">
+                     <input
+                       type="text"
+                       t-ref="userSearch"
+                       id="user-search"
+                       class="search-input"
+                       placeholder="Buscar paciente"
+                       t-on-input="onSearch"
+                     />
+                  </div>
+                  <div class="product-img-create-popup">
+                     <img t-att-src="imageUrl" id="img_url_tag_create"/>
+                  </div>
+                  <div class='patient-scroll'>
+                     <table class='patient'>
+                         <tbody>
+                             <tr t-on-click="patientSelected" class="user-row" t-foreach="props.patient_id" t-as="patient_id" t-key="patient_id.id" t-att-data-id="patient_id.id" t-att-data-name="patient_id.name">
+                                 <td>
+                                     <span t-esc="patient_id.name" />
+                                 </td>
+                                 <td>
+                                     <span t-esc="patient_id.identification" />
+                                 </td>
+                             </tr>
+                         </tbody>
+                     </table>
+                 </div>
+
+               </header>
+            </div>
+         </main>
+          <footer class="footer cash-move">
+            <div class="button confirm disable highlight" t-on-click="confirm">
+                            Confirmar
+                        </div>
+              <div class="button cancel" t-on-click="cancel">
+                    Cancelar
+            </div>
+         </footer>
+      </div>
+   </t>
+</templates>

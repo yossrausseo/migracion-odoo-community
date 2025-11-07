@@ -1,0 +1,25 @@
+.patient-scroll{
+    height: 270px;
+    overflow: auto;
+  }
+  
+  .patient {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  .patient td{
+    text-align: left;
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  .patient tr:hover {background-color: #76fcae;}
+  
+  .orderline-patient{
+      padding:0;
+      float:right;
+  }
+  .patient-selected{
+    background-color: #76fcae;
+  }
