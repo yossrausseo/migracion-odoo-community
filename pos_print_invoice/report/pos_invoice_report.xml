@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- 
+            Definimos una acción de reporte propia.
+            - id: El nombre que usaremos en el JavaScript.
+            - model: account.move (porque vamos a imprimir facturas).
+            - report_name: AQUÍ ponemos el ID de la plantilla que modificaste anteriormente.
+        -->
+        <record id="action_report_pos_invoice_igtf" model="ir.actions.report">
+            <field name="name">Factura POS (IGTF)</field>
+            <field name="model">account.move</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">pos_print_invoice.report_free_form_invoice</field>
+            <field name="report_file">pos_print_invoice.report_free_form_invoice</field>
+            <field name="print_report_name">'Factura_%s' % (object.name).replace('/', '')</field>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_type">report</field>
+        </record>
+    </data>
+</odoo>

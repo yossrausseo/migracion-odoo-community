@@ -1,0 +1,216 @@
+<odoo>
+  <template id="report_free_form_invoice">
+        <t t-call="web.basic_layout">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <div class="header">
+                        <div class="row">
+                            <div class="col-7" style="font-size: 14px;">
+                                 <ul class="data-invoice list-inline">
+                                     <li class="tittle text-left">
+                                         <strong>CLIENTE: </strong><span t-field="o.partner_id"/>
+                                     </li>
+                                     <li>
+                                         <strong>RIF: </strong> <span t-field="o.partner_id.doc_type"/>-<span t-field="o.partner_id.vat"/>
+                                     </li>
+                                     <li>
+                                         <strong>DIRECCIÓN FISCAL:</strong>
+                                         <span t-field="o.partner_id.street"/>
+                                         <span t-field="o.partner_id.street2"/>
+                                         <span t-field="o.partner_id.city"/>
+                                         <span t-field="o.partner_id.zip"/>
+                                     </li>
+                                 </ul>
+                            </div>
+                            <div class="col-4" style="font-size: 14px;">
+                                <ul class="data-invoice list-inline mb4" style="text-align: right;">
+                                    <li class="tittle text-right">
+                                        <t t-if="o.move_type in ('out_refund', 'in_refund') and not o.is_delivery_note">
+                                            <strong>NOTA DE CRÉDITO: </strong>
+                                    </t>
+                                        <t t-if="o.move_type in ('out_invoice', 'in_invoice') and o.debit_origin_id and not o.is_delivery_note">
+                                            <strong>NOTA DE DÉBITO: </strong>
+                                        </t>
+                                        <t t-if="o.move_type in ('out_invoice', 'in_invoice') and not o.debit_origin_id and not o.is_delivery_note">
+                                            <strong>FACTURA: </strong>
+                                        </t>
+                                        <span t-field="o.invoice_number_next"/>
+                                    </li>
+                                    <li class="tittle text-right">
+                                        <strong>FECHA DE EMISIÓN: </strong><span t-field="o.invoice_date"/>
+                                    </li>
+                                    <li class="tittle text-right" t-if="(o.move_type in ('out_refund','in_refund') or (o.move_type in ('out_invoice','in_invoice') and o.debit_origin_id)) and o.reason">
+                                        <strong>Nº Factura Afectada: </strong>
+                                        <span t-field="o.reason"/>
+                                    </li>
+                                    <li class="tittle text-right" t-if="(o.move_type in ('out_refund','in_refund') or (o.move_type in ('out_invoice','in_invoice') and o.debit_origin_id)) and o.reason">
+                                        <strong>Fecha Factura Afectada: </strong>
+                                        <t t-if="o.move_type in ('out_refund','in_refund') and o.reversed_entry_id">
+                                            <span t-field="o.reversed_entry_id.invoice_date"/>
+                                        </t>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page">
+                        <t t-if="o.company_id.currency_id == o.currency_id">
+                            <t t-call="report_invoice_line_bs"/>
+                        </t>
+                        <t t-else="">
+                            <t t-call="report_invoice_line_rate_bs"/>
+                        </t>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+    <template id ="report_invoice_line_bs">
+      <!-- Página fija -->
+      <div style="position:relative; width:216mm; height:130mm; box-sizing:border-box;">
+      <!-- TABLA DE LÍNEAS -->
+      <div style="position:absolute; top:5mm; left:0; right:0; bottom:-5mm; padding:0 8mm; box-sizing:border-box;">
+        <table class="table table-sm table-borderless" style="font-size:14px; width:100%; border-collapse:collapse; margin:0;">
+          <thead>
+            <tr>
+              <th style="text-align:center;">CANTIDAD</th>
+              <th style="text-align:center;">DESCRIPCIÓN</th>
+              <th style="text-align:right;">PRECIO UNITARIO</th>
+              <th style="text-align:right;">SUBTOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <t t-foreach="o.invoice_line_ids" t-as="line">
+              <t-if="'&gt;' not in line.name and line.product_id.name != 'IGTF'">
+                <tr>
+                  <td style="text-align:center;"><span t-esc="int(line.quantity)"/></td>
+                  <td style="text-align:center;"><span t-field="line.product_id.name"/></td>
+                  <td style="text-align:right;">
+                    <span t-field="line.price_unit" t-options="{&quot;widget&quot;:&quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id, &quot;precision&quot;:2}"/>
+                  </td>
+                  <td style="text-align:right;"><span t-field="line.price_subtotal"/></td>
+                </tr>
+              </t>
+            </t>
+          </tbody>
+        </table>
+      </div>
+    
+      <!-- TOTALES -->
+      <div style="position:absolute; top:50mm; right:0; bottom:0; width:90mm; padding:0 8mm 8mm 8mm; box-sizing:border-box;">
+        <!-- 1. CALCULAMOS EL MONTO DEL IGTF SUMANDO LAS LÍNEAS -->
+        <t t-set="igtf_monto_lineas" t-value="sum(l.price_subtotal for l in o.invoice_line_ids if l.product_id.name == 'IGTF')"/>
+        <table class="table table-sm table-borderless" style="width:100%; font-size:14px; border-collapse:collapse; margin:0; line-height: 1.1;">
+          <tr>
+            <td style="text-align:right;"><strong>BASE IMPONIBLE</strong></td>
+            <td style="text-align:right;">
+              <span t-esc="o.amount_untaxed or 0.0" t-options="{'widget':'monetary','display_currency':o.currency_id,'precision':2}"/>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align:right;"><strong>EXENTO</strong></td>
+            <td style="text-align:right;">
+              <span t-esc="o.iva_exempt or 0.0" t-options="{'widget':'monetary','display_currency':o.currency_id}"/>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align:right;"><strong>IVA 16%</strong></td>
+            <td style="text-align:right;">
+              <span t-esc="o.iva_general or 0.0" t-options="{'widget':'monetary','display_currency':o.currency_id}"/>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align:right;"><strong>TOTAL</strong></td>
+            <!-- <td style="text-align:right;"><span t-field="o.amount_total"/></td> -->
+            <td style="text-align:right;"><span t-esc="o.amount_total - igtf_monto_lineas" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td>
+          </tr>
+          <tr>
+            <td style="text-align: right;">
+              <strong>IGTF (3.0%)</strong>
+              <span/>
+              <!-- <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(o.igtf_amount)"/></td> -->
+              <td style="text-align:right;"><span t-esc="igtf_monto_lineas" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: right;">
+              <strong>Total + IGTF</strong>
+              <span/>
+              <td style="text-align:right;"><span t-esc="'{:,.2f}'.format(o.total_with_igtf)"/></td>
+            </td>
+          </tr>
+        </table>
+      </div>
+    
+    </div>
+    </template>
+
+    <template id="report_invoice_line_rate_bs">
+  <!-- Página fija -->
+  <div style="position:relative; width:216mm; height:130mm; box-sizing:border-box;">
+    <!-- TABLA DE LÍNEAS (rate) -->
+    <div style="position:absolute; top:20mm; left:0; right:0; bottom:-5mm; padding:0 8mm; box-sizing:border-box;">
+      <table class="table table-sm table-borderless" style="font-size:14px; width:100%; border-collapse:collapse; margin:0;">
+        <thead>
+          <tr>
+            <th style="text-align:center;">CANTIDAD</th>
+            <th style="text-align:center;">DESCRIPCIÓN</th>
+            <th style="text-align:right;">PRECIO UNITARIO</th>
+            <th style="text-align:right;">SUBTOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <t t-foreach="o.invoice_line_ids" t-as="line">
+            <t-if="'&gt;' not in line.name and line.product_id.name != 'IGTF'">
+              <tr>
+                <td style="text-align:center;"><span t-esc="int(line.quantity)"/></td>
+                <td style="text-align:center;"><span t-field="line.product_id.name"/></td>
+                <td style="text-align:right;">
+                  <span t-field="line.price_unit_rate" t-options="{&quot;widget&quot;:&quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id2, &quot;precision&quot;: 2}"/>
+                </td>
+                <td style="text-align:right;">
+                  <span t-field="line.price_subtotal_rate" t-options="{&quot;widget&quot;:&quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id2, &quot;precision&quot;: 2}"/>
+                </td>
+              </tr>
+            </t>
+          </t>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TOTALES (rate) -->
+    <div style="position:absolute; top:65mm; right:0; bottom:0; width:90mm; padding:0 8mm 8mm 8mm; box-sizing:border-box;">
+      <table class="table table-sm table-borderless" style="width:100%; font-size:14px; border-collapse:collapse; margin:0; line-height:1.1;">
+        <tr>
+          <td style="text-align:right;"><strong>BASE IMPONIBLE</strong></td>
+          <td style="text-align:right;">
+            <span t-field="o.amount_untaxed_signed_rate" t-options="{&quot;widget&quot;:&quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id2, &quot;precision&quot;: 2}"/>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="text-align:right;"><strong>EXENTO</strong></td>
+          <td style="text-align:right;">
+            <span t-esc="(o.iva_exempt or 0.0) * (o.os_currency_rate or 0.0)" t-options="{&quot;widget&quot;:&quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id2, &quot;precision&quot;: 2}"/>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="text-align:right;"><strong>IVA 16%</strong></td>
+          <td style="text-align:right;">
+            <span t-esc="(o.iva_general or 0.0) * (o.os_currency_rate or 0.0)" t-options="{&quot;widget&quot;:&quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id2, &quot;precision&quot;: 2}"/>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="text-align:right;"><strong>TOTAL</strong></td>
+          <td style="text-align:right;">
+            <span t-field="o.amount_total_signed_aux_rate" t-options="{&quot;widget&quot;:&quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id2, &quot;precision&quot;: 2}"/>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</template>
+
+</odoo>
